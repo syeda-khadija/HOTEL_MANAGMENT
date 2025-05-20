@@ -20,27 +20,40 @@ export default function Hotelroom() {
   const [roomtype, setRtype] = useState('');
   const [description, setDes] = useState('');
   const [room_no, setRoom_no] = useState('');
-  const [no_bed, setNo_bed] = useState(0);
+  const [no_bed, setNo_bed] = useState(1);
   const [is_available, setIs_available] = useState('');
   const [floor, setFloor] = useState('');
-  const [price, setPrice] = useState(0);
+  const [price, setPrice] = useState(10000);
   const [image, setImage] = useState(null);
+  const [preview, setPreview] = useState(null); // NEW
+  
 
   function clearForm() {
     setRtype('');
     setDes('');
     setRoom_no('');
-    setNo_bed(0);
+    setNo_bed(1);
     setIs_available('');
     setFloor('');
-    setPrice(0);
+    setPrice(10000);
     setImage(null);
+    setPreview(null);
   }
 
   async function addroom() {
     try {
-      if (!roomtype || !description || !room_no || no_bed <= 0 || !is_available || !price || !image || !floor) {
+      if (!roomtype || !description || !room_no || !floor || !is_available || !image) {
         toast.error('All fields are required');
+        return;
+      }
+
+      if (no_bed < 1 || no_bed > 5) {
+        toast.error('No. of beds must be between 1 and 5');
+        return;
+      }
+
+      if (price < 10000) {
+        toast.error('Price must be at least 10000');
         return;
       }
 
@@ -75,7 +88,7 @@ export default function Hotelroom() {
         <h3 className="text-primary mb-3">Add Room</h3>
         <div className="row">
 
-          {/* Room Type Dropdown */}
+          {/* Room Type */}
           <div className="col-md-6 mb-3">
             <label>Room Type</label>
             <select
@@ -103,7 +116,7 @@ export default function Hotelroom() {
             />
           </div>
 
-          {/* Floor Dropdown */}
+          {/* Floor */}
           <div className="col-md-6 mb-3">
             <label>Floor</label>
             <select
@@ -141,17 +154,19 @@ export default function Hotelroom() {
 
           {/* Number of Beds */}
           <div className="col-md-6 mb-3">
-            <label>No. of Beds</label>
+            <label>No. of Beds (1-5)</label>
             <input
               type="number"
               className="form-control"
+              min="1"
+              max="5"
               value={no_bed}
               onChange={(e) => setNo_bed(Number(e.target.value))}
               placeholder="Enter number of beds"
             />
           </div>
 
-          {/* Is Available Dropdown */}
+          {/* Availability */}
           <div className="col-md-6 mb-3">
             <label>Is Available</label>
             <select
@@ -167,10 +182,11 @@ export default function Hotelroom() {
 
           {/* Price */}
           <div className="col-md-6 mb-3">
-            <label>Price</label>
+            <label>Price (min 10000)</label>
             <input
               type="number"
               className="form-control"
+              min="10000"
               value={price}
               onChange={(e) => setPrice(Number(e.target.value))}
               placeholder="Enter price"
@@ -179,13 +195,28 @@ export default function Hotelroom() {
 
           {/* Room Image */}
           <div className="col-md-6 mb-4">
-            <label>Room Image</label>
-            <input
-              type="file"
-              className="form-control"
-              onChange={(e) => setImage(e.target.files[0])}
-            />
-          </div>
+  <label>Room Image</label>
+  <input
+    type="file"
+    className="form-control"
+    onChange={(e) => {
+      const file = e.target.files[0];
+      setImage(file);
+      setPreview(file ? URL.createObjectURL(file) : null);
+    }}
+  />
+  {preview && (
+    <div className="mt-3">
+      <label>Image Preview:</label>
+      <img
+        src={preview}
+        alt="Room Preview"
+        className="img-fluid rounded"
+        style={{ maxHeight: '200px' }}
+      />
+    </div>
+  )}
+</div>
 
           {/* Submit Button */}
           <div className="col-md-12">
