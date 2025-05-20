@@ -1,5 +1,7 @@
 let express = require("express");
 let r = require("./Routing/Route");
+let room_route = require("./Routing/Roomrouter");
+
 let db = require("./Connect");
 let user = require("./Models/Usermodel");
 let room = require("./Models/Room");
@@ -20,6 +22,9 @@ let application = express();
 application.use(cors());
 application.use(express.json());
 application.use("/Web/", r);
+application.use("/room/", room_route);
+app.use('/uploads', express.static('uploads'));
+
 
 
 // Add data in User collection

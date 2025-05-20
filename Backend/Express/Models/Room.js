@@ -22,14 +22,18 @@ let Room_collection=mongo.Schema({
         type: Boolean,
         default: true
     },
+    floor_no: {
+        type: String,
+        default: true
+    },
     price :{
         type:Number,
         required:true
     }, 
-     image: {
-        type: String,     // This will store the URL or path of the image
-        required: false   // Optional, set to true if image is mandatory
-    },
+    image: {
+        type: String,
+        required: true
+      },
     created_at:{
         type:Date,
         default:Date.now

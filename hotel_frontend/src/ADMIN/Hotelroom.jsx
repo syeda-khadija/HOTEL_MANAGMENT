@@ -4,14 +4,27 @@ import { ToastContainer, toast } from 'react-toastify';
 import axios from 'axios';
 import 'react-toastify/dist/ReactToastify.css';
 
+// Helper function to get floor prefix
+function getFloorPrefix(floorName) {
+  switch (floorName) {
+    case 'Ground': return 'G';
+    case '1st': return 'F';
+    case '2nd': return 'S';
+    case '3rd': return 'T';
+    case '4th': return 'FR';
+    default: return '';
+  }
+}
+
 export default function Hotelroom() {
   const [roomtype, setRtype] = useState('');
   const [description, setDes] = useState('');
   const [room_no, setRoom_no] = useState('');
   const [no_bed, setNo_bed] = useState(0);
   const [is_available, setIs_available] = useState('');
+  const [floor, setFloor] = useState('');
   const [price, setPrice] = useState(0);
-  const [image, setImage] = useState(null); // <-- image state
+  const [image, setImage] = useState(null);
 
   function clearForm() {
     setRtype('');
@@ -19,13 +32,14 @@ export default function Hotelroom() {
     setRoom_no('');
     setNo_bed(0);
     setIs_available('');
+    setFloor('');
     setPrice(0);
     setImage(null);
   }
 
   async function addroom() {
     try {
-      if (!roomtype || !description || !room_no || no_bed <= 0 || !is_available || !price || !image) {
+      if (!roomtype || !description || !room_no || no_bed <= 0 || !is_available || !price || !image || !floor) {
         toast.error('All fields are required');
         return;
       }
@@ -36,24 +50,21 @@ export default function Hotelroom() {
       formData.append('room_number', room_no);
       formData.append('no_of_bed', no_bed);
       formData.append('is_available', is_available);
+      formData.append('floor_no', floor);
       formData.append('price', price);
-      formData.append('image', image); // <-- attach image
+      formData.append('image', image);
 
-      await axios.post('http://localhost:3007/Web/create', {
-        room_type: roomtype,
-        description: description,
-        room_number: room_no,
-        no_of_bed: no_bed,
-        is_available: is_available,
-        price:price,
-        image:image
+      await axios.post('http://localhost:3007/room/create', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        }
       });
 
       toast.success('Room added successfully!');
       clearForm();
     } catch (error) {
       toast.error('Network or server error');
-      console.error(error);
+      console.error(error.message);
     }
   }
 
@@ -63,17 +74,24 @@ export default function Hotelroom() {
       <div className="card shadow p-4">
         <h3 className="text-primary mb-3">Add Room</h3>
         <div className="row">
-          {/* Other inputs (same as before)... */}
+
+          {/* Room Type Dropdown */}
           <div className="col-md-6 mb-3">
             <label>Room Type</label>
-            <input
-              type="text"
+            <select
               className="form-control"
               value={roomtype}
               onChange={(e) => setRtype(e.target.value)}
-              placeholder="Enter room type"
-            />
+            >
+              <option value="">Select room type</option>
+              <option value="Single">Single</option>
+              <option value="Double">Double</option>
+              <option value="Suite">Suite</option>
+              <option value="Deluxe">Deluxe</option>
+            </select>
           </div>
+
+          {/* Description */}
           <div className="col-md-6 mb-3">
             <label>Description</label>
             <input
@@ -84,6 +102,32 @@ export default function Hotelroom() {
               placeholder="Enter description"
             />
           </div>
+
+          {/* Floor Dropdown */}
+          <div className="col-md-6 mb-3">
+            <label>Floor</label>
+            <select
+              className="form-control"
+              value={floor}
+              onChange={(e) => {
+                const selectedFloor = e.target.value;
+                setFloor(selectedFloor);
+                const prefix = getFloorPrefix(selectedFloor);
+                if (!room_no || !room_no.startsWith(prefix)) {
+                  setRoom_no(prefix);
+                }
+              }}
+            >
+              <option value="">Select floor</option>
+              <option value="Ground">Ground</option>
+              <option value="1st">1st</option>
+              <option value="2nd">2nd</option>
+              <option value="3rd">3rd</option>
+              <option value="4th">4th</option>
+            </select>
+          </div>
+
+          {/* Room Number */}
           <div className="col-md-6 mb-3">
             <label>Room Number</label>
             <input
@@ -94,6 +138,8 @@ export default function Hotelroom() {
               placeholder="Enter room number"
             />
           </div>
+
+          {/* Number of Beds */}
           <div className="col-md-6 mb-3">
             <label>No. of Beds</label>
             <input
@@ -104,16 +150,22 @@ export default function Hotelroom() {
               placeholder="Enter number of beds"
             />
           </div>
+
+          {/* Is Available Dropdown */}
           <div className="col-md-6 mb-3">
             <label>Is Available</label>
-            <input
-              type="text"
+            <select
               className="form-control"
               value={is_available}
               onChange={(e) => setIs_available(e.target.value)}
-              placeholder="Yes / No"
-            />
+            >
+              <option value="">Select availability</option>
+              <option value="true">Yes</option>
+              <option value="false">No</option>
+            </select>
           </div>
+
+          {/* Price */}
           <div className="col-md-6 mb-3">
             <label>Price</label>
             <input
@@ -124,15 +176,18 @@ export default function Hotelroom() {
               placeholder="Enter price"
             />
           </div>
-          <div className="col-md-12 mb-4">
+
+          {/* Room Image */}
+          <div className="col-md-6 mb-4">
             <label>Room Image</label>
             <input
               type="file"
               className="form-control"
-              
               onChange={(e) => setImage(e.target.files[0])}
             />
           </div>
+
+          {/* Submit Button */}
           <div className="col-md-12">
             <button className="btn btn-primary w-100" onClick={addroom}>
               Add Room
@@ -140,7 +195,7 @@ export default function Hotelroom() {
           </div>
         </div>
       </div>
-      <ToastContainer/>
+      <ToastContainer />
     </div>
   );
 }

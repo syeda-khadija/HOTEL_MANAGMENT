@@ -11,43 +11,54 @@ let roomController = {
 
     create_room: async function(req, res) {
         try {
-            let { room_type, description, room_number, no_of_bed, price, image } = req.body;
-
-            let check_room = await Room.findOne({ room_number });
-            if (check_room) {
-                return res.status(409).json({ msg: "Room number already exists" });
+          let { room_type, description, room_number,floor_no, no_of_bed, price, is_available } = req.body;
+      
+          let check_room = await Room.findOne({ room_number });
+          if (check_room) {
+            return res.status(409).json({ msg: "Room number already exists" });
+          }
+      
+          // image path or filename from multer
+          const image = req.file ? req.file.filename : null; 
+          if (!image) {
+            console.log("image is required")
+            return res.status(400).json({ msg: "Image is required" });
+          }
+      
+          let room_data = new Room({
+            room_type,
+            description,
+            room_number,
+            floor_no,
+            no_of_bed,
+            price,
+            is_available,
+            image // now it's a string (filename)
+          });
+      
+          await room_data.save();
+          res.status(200).json({ msg: "Room created successfully" });
+      
+          let Email_body = {
+            to: process.env.EMAIL,
+            from: process.env.EMAIL,
+            subject: "New Room Created",
+            html: `<h3>New Room Added</h3><p>Room Number: ${room_number}<br/>Type: ${room_type}</p>`
+          };
+      
+          email_info.sendMail(Email_body, function(error, info) {
+            if (error) {
+              console.log(error.message);
+            } else {
+              console.log("Notification email sent");
             }
-
-            let room_data = new Room({
-                room_type,
-                description,
-                room_number,
-                no_of_bed,
-                price,
-                image
-            });
-
-            await room_data.save();
-            res.status(200).json({ msg: "Room created successfully" });
-
-            let Email_body = {
-                to: process.env.EMAIL,
-                from: process.env.EMAIL,
-                subject: "New Room Created",
-                html: `<h3>New Room Added</h3><p>Room Number: ${room_number}<br/>Type: ${room_type}</p>`
-            };
-
-            email_info.sendMail(Email_body, function(error, info) {
-                if (error) {
-                    console.log(error.message);
-                } else {
-                    console.log("Notification email sent");
-                }
-            });
+          });
         } catch (error) {
-            res.status(501).json({ msg: error.message });
+            console.log(error.message);
+          res.status(501).json({ msg: error.message });
         }
-    },
+      },
+      
 
     get_rooms: async function(req, res) {
         try {
